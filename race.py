@@ -60,6 +60,14 @@ class Race():
 			races_list.append(temp_race)
 		return(races_list)
 
+	def sortedHorseOdds(self):
+		horses_list = sorted(self.horses, key=lambda x:float(x.odds))
+		horses_list_clean=[]
+		for h in horses_list:
+			if float(h.odds) == 0:continue				
+			horses_list_clean.append(h)
+		return(horses_list_clean)
+
 
 	def _col2num(col):
 	    num = 0

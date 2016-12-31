@@ -33,7 +33,8 @@ def main():
                                                row[_col2num('W')]:row[_col2num('X')],
                                                row[_col2num('Y')]:row[_col2num('Z')],
                                                },
-                            "finish_position":{row[_col2num('AE')]:row[_col2num('AD')]},
+                            "finish_position":{'position':row[_col2num('AE')],
+                                                'dist_behind':row[_col2num('AD')]},
                             "trainer":row[_col2num('AH')],
                             "stable":row[_col2num('AI')],
                             'gender':row[_col2num('K')]}

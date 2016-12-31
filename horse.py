@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 class HorseInstance():
 	def __init__(self,number,gate_position,date,track,race_number,name,jockey,age,
-				odds,position_splits,gender):
+				odds,position_splits,gender,finish_position):
 		self.number=number					# O
 		self.gate_position=gate_position	# P
 		self.date=date						# C
@@ -14,10 +14,11 @@ class HorseInstance():
 		self.odds=odds						# N
 		self.position_splits=position_splits # [{S:T},{U:V},{W:X},{Y:Z}]
 		self.gender=gender					# K
+		self.finish_position=finish_position
 
 	@staticmethod
 	def findHorses(number=None,gate_position=None,date=None,track=None,race_number=None,name=None,jockey=None
-				,age=None,odds=None,position_splits=None,gender=None):
+				,age=None,odds=None,position_splits=None,gender=None,finish_position=None):
 		query = {}
 		for k,v in locals().items():
 			if v is None or k == 'query':continue
@@ -34,7 +35,9 @@ class HorseInstance():
 
 		horses_list=[]
 		for h in horses:
-			horses_list.append(HorseInstance(h['number'], h['gate_position'], h['date'], 
-								h['track'], h['race_number'], h['name'], h['jockey'], 
-								h['age'], h['odds'], h['position_splits'], h['gender']))
+			horses_list.append(HorseInstance(number=h['number'], gate_position=h['gate_position'],
+								date=h['date'], track=h['track'], race_number=h['race_number'], 
+								name=h['name'], jockey=h['jockey'], age=h['age'], odds=h['odds'], 
+								position_splits=h['position_splits'], gender=h['gender'],
+								finish_position=h['finish_position']))
 		return(horses_list)
