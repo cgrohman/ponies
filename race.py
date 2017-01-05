@@ -1,5 +1,9 @@
 from pymongo import MongoClient
 from horse import HorseInstance
+import pandas as pd
+import numpy as np
+import pprint
+import logging
 
 class Race():
 	def __init__(self, track, date, race_type, race_number, description,
@@ -68,6 +72,12 @@ class Race():
 			horses_list_clean.append(h)
 		return(horses_list_clean)
 
+	def toDict(self):
+		horses_list=[]
+		for h in self.horses:
+			horses_list.append(h.__dict__)
+		self.horses = horses_list
+		return(self.__dict__)
 
 	def _col2num(col):
 	    num = 0

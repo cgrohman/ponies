@@ -6,6 +6,7 @@ from pymongo import MongoClient
 import string
 
 def main():
+    LOAD = ['H','']
     pclient = MongoClient()
     pdb = pclient["PONIES"]
     rcol = pdb.RACES
@@ -19,25 +20,25 @@ def main():
                 checkExit(count)
                 if row[0]=='H':
                     horse = {
-                            'name':row[_col2num('H')],
-                            "number":row[_col2num('O')],
-                            "gate_position":row[_col2num('P')],
-                            "date":row[_col2num('C')],
-                            "track":row[_col2num('B')],
-                            "race_number":row[_col2num('D')],
-                            "jockey":{row[_col2num('M')]:row[_col2num('I')]},
-                            "age":row[_col2num('J')],
-                            "odds":row[_col2num('N')],
-                            "position_splits":{row[_col2num('S')]:row[_col2num('T')],
-                                               row[_col2num('U')]:row[_col2num('V')],
-                                               row[_col2num('W')]:row[_col2num('X')],
-                                               row[_col2num('Y')]:row[_col2num('Z')],
+                            'name':row[_col2num('H')].strip(),
+                            "number":row[_col2num('O')].strip(),
+                            "gate_position":row[_col2num('P')].strip(),
+                            "date":row[_col2num('C')].strip(),
+                            "track":row[_col2num('B')].strip(),
+                            "race_number":row[_col2num('D')].strip(),
+                            "jockey":{'name':row[_col2num('M')].strip(),'weight':row[_col2num('I')].strip()},
+                            "age":row[_col2num('J')].strip(),
+                            "odds":row[_col2num('N')].strip(),
+                            "position_splits":{row[_col2num('S')].strip():row[_col2num('T')].strip(),
+                                               row[_col2num('U')].strip():row[_col2num('V')].strip(),
+                                               row[_col2num('W')].strip():row[_col2num('X')].strip(),
+                                               row[_col2num('Y')].strip():row[_col2num('Z')].strip(),
                                                },
-                            "finish_position":{'position':row[_col2num('AE')],
-                                                'dist_behind':row[_col2num('AD')]},
-                            "trainer":row[_col2num('AH')],
-                            "stable":row[_col2num('AI')],
-                            'gender':row[_col2num('K')]}
+                            "finish_position":{'position':row[_col2num('AE')].strip(),
+                                                'dist_behind':row[_col2num('AD')].strip()},
+                            "trainer":row[_col2num('AH')].strip(),
+                            "stable":row[_col2num('AI')].strip(),
+                            'gender':row[_col2num('K')].strip()}
                     hcol.insert_one(horse)
 
                 if row[0]=='R':
@@ -80,7 +81,6 @@ def main():
                             'weather':row[_col2num('T')],
                     }
                     rcol.insert_one(race)
-
             continue
 
 def _findData(search,row):
