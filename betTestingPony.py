@@ -33,7 +33,9 @@ def main():
     statc.printStats()
     statd.printStats()
     
-
+##############################################################
+# One two overall (Cameron) Bet
+##############################################################
 def one_two_overall(races,stat,DIFF=1):
     stat.name = "One/Two Overall"
     for race in races:
@@ -63,7 +65,11 @@ def one_two_overall_conditions(horses, DIFF):
     if float(horses[1].odds)*DIFF <= float(horses[2].odds):
         flag = True
     return(flag)
+#######################################################################
 
+##############################################################
+# Two three overall (Camerons Dad) Bet
+##############################################################
 def two_three_overall(races,stat,DIFF=1):
     stat.name = "Two/Three Overall"
     for race in races:
@@ -88,7 +94,7 @@ def two_three_overall(races,stat,DIFF=1):
                 logger.warning('LOST- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number))
             stat.appendBet([cost_of_bet, exacta_payout, WON])
     return()        
-
+########################################################
 
 if __name__ == '__main__':
     main()
