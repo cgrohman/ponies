@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 
-class HorseInstance():
+class Horse():
 	def __init__(self,number,gate_position,date,track,race_number,name,jockey,age,
 				odds,position_splits,gender,finish_position):
 		self.number=number					# O
@@ -35,7 +35,7 @@ class HorseInstance():
 
 		horses_list=[]
 		for h in horses:
-			horses_list.append(HorseInstance(number=h['number'], gate_position=h['gate_position'],
+			horses_list.append(Horse(number=h['number'], gate_position=h['gate_position'],
 								date=h['date'], track=h['track'], race_number=h['race_number'], 
 								name=h['name'], jockey=h['jockey'], age=h['age'], odds=h['odds'], 
 								position_splits=h['position_splits'], gender=h['gender'],

@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from horse import HorseInstance
+from horse import Horse
 import pandas as pd
 import numpy as np
 import pprint
@@ -31,7 +31,7 @@ class Race():
 		self.daily_double=daily_double
 		self.consolation_pick=consolation_pick
 		self.weather=weather
-		self.horses = HorseInstance.findHorses(track=track, date=date,race_number=race_number)
+		self.horses = Horse.findHorses(track=track, date=date,race_number=race_number)
 
 	@staticmethod
 	def findRaces(track=None,date=None,race_type=None,race_number=None,
