@@ -17,7 +17,6 @@ class Stats(object):
 
 	def getStats(self):
 		payout_data=pd.Series(self.payout_stats)
-		#payout_data=self.payout_stats
 		return(payout_data.describe())
 
 	def appendBet(self,bet_info):
@@ -32,6 +31,6 @@ class Stats(object):
 
 	def printStats(self):
 		stats = self.getStats()
-		logging.info('Name: {}\nFinal bank: {}\n{}'.format(self.name, round(self.bank,3), stats))
+		logging.info('\nName: {}\nFinal bank: {}\n{}'.format(self.name, round(self.bank,3), stats))
 #		print('Name: {}\nFinal bank: {}\n{}'.format(self.name, round(self.bank,3), stats))
 		return
