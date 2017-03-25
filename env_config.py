@@ -16,4 +16,3 @@ logging_config = dict(
         'level': logging.INFO,
         }
 )
-

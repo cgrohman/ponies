@@ -1,7 +1,18 @@
 import logging
 import pdb
 import numpy as np
+############################################
+# Keeps stats on a bet run. Gets passed to
+#  the bet being tested and can be used to 
+#  visualize and analyze the results
+# To-do:
+#  - Things to track (single pd dataframe?):
+#    - 
+############################################
+
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 class Stats(object):
 	"""docstring for Stats"""
