@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 from glob import glob
 import re
 import pdb
-import logging
-from logging.config import dictConfig
+import datetime
 
 from race import Race
 from stats import Stats
@@ -16,7 +15,6 @@ from bet_strategy import bets
 from utilities import hook
 from utilities import lineno
 import utilities
-import env_config
 
 SCRIPT_NAME    = 'test_bets.py'
 SCRIPT_VERSION = '1.0'
@@ -41,6 +39,7 @@ def plot_bet(bet_list, DIFF, bet_name):
   plt.xlabel("Races")
   plt.title(bet_name)
   plt.legend(np.array(DIFF),loc='lower left')
+  plt.grid()
   plt.show()
   return
 
@@ -63,28 +62,35 @@ def build_testing_list(track, date):
 
 #------------------------------------------------------------------------------
 def main():
+  start_time = datetime.datetime.now()
   args = get_args()
   hook(SCRIPT_NAME, "INFO", "LOW", lineno(), "Running version: {}".format(SCRIPT_VERSION))
-  DIFF=[1,1.25,1.5,1.75,2,2.25,2.5]
   testing_list = build_testing_list(args.track, args.date)
   
+  # Bet info
+  DIFF     = [1,1.25,1.5,1.75,2,2.25,2.5]
+  first    = 'All'
+  second   = [1,2,3]
+  third    = [1,2,3]
+  bet_name = 'Trifecta: 1st = {}, 2nd = {}, 3rd = {}'.format(first, second, third)
+
   stata_list = []
   all_test_list=[]
-  first=[1,2,3,4]
-  second=[1,2,3,4]
   for diff in DIFF:
     statb = Stats(starting_bank=400)
-    bank=[400]
+    bank=[1000]
     for day in testing_list:
       races = Race.findRaces(date=day[0],track=day[1], race_number=args.race)
       if not races:
         hook(SCRIPT_NAME, "ERROR", "XXX", lineno(), 'Could not find races: {} {}'.format(day[0], day[1]))
       for race in races:
-        race_outcome = bets.exacta_box(race, statb, first, second, diff)
+        race_outcome = bets.trifecta(race, statb, bet_name, first, second, third, diff)
         bank.append(bank[-1] + race_outcome)
     all_test_list.append(bank)
+  
 
-  plot_bet(all_test_list, DIFF, 'Exacta: {} over {}'.format(first,second))
+  hook(SCRIPT_NAME, "INFO", "LOW", lineno(), "Execution time: {}".format(str(datetime.datetime.now() - start_time)))
+  plot_bet(all_test_list, DIFF, bet_name)
   # statb.printStats()
 
 #------------------------------------------------------------------------------
