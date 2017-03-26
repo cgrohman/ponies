@@ -2,6 +2,7 @@ from stats import Stats
 from race import Race
 from horse import Horse
 import pdb
+import itertools
 
 from utilities import hook
 from utilities import lineno
@@ -141,6 +142,9 @@ def exacta_box(race, stat, first, second='All', DIFF=1):
   outcome = 0
   if float(ordered_horses_odds[max(first)-1].odds)*DIFF <= float(ordered_horses_odds[max(first)].odds):
     cost_of_bet = len(first)*(len(first)-1)*exacta_bet
+    calc = calculate_bet_cost([first_horse_list, first_horse_list], exacta_bet, True)
+    if cost_of_bet != calc:
+      hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'Bet costs are not equal: {} calced: {}'.format(cost_of_bet, calc)) 
     outcome -= cost_of_bet
     WON = False
     first_flag,second_flag = False,False
@@ -175,7 +179,7 @@ def trifecta(race, stat, bet_name, first, second='All', third='All', DIFF=1):
   if not ordered_horses_odds:
     hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'No odds for any horses- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
     return(0)
-  if len(ordered_horses_odds)<4:
+  if len(ordered_horses_odds)<5:
     hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'Not enough horses for this bet- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
     return(0)
 
@@ -185,8 +189,9 @@ def trifecta(race, stat, bet_name, first, second='All', third='All', DIFF=1):
   third_horse_list  = build_horse_list(third,  ordered_horses_odds)
   
   outcome = 0
-  if float(ordered_horses_odds[max(second)-1].odds)*DIFF <= float(ordered_horses_odds[max(second)].odds):
-    cost_of_bet = (len(first_horse_list)-2)*len(second_horse_list)*(len(third_horse_list)-1)*trifecta_bet
+  if float(ordered_horses_odds[max(third)-1].odds)*DIFF <= float(ordered_horses_odds[max(third)].odds):
+    hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Position/odds: {}/{} {}/{}'.format(max(third), ordered_horses_odds[max(third)].odds, max(third)+1, ordered_horses_odds[max(third)+1].odds))
+    cost_of_bet = calculate_bet_cost([first_horse_list, second_horse_list, third_horse_list], trifecta_bet, True)
     outcome -= cost_of_bet
     WON = False
     
@@ -239,3 +244,12 @@ def did_horse_hit(horses, position):
       if h.finish_position['position'] == position:
         return True
   return False
+
+#------------------------------------------------------------------------------
+def calculate_bet_cost(legs, amount, unique):
+  num_bets = 0
+  if unique:
+    num_bets = len([ tuple(ea) for ea in itertools.product(*legs) if len(ea) == len(set(ea)) ])
+  else:
+    num_bets = len([ tuple(ea) for ea in itertools.product(*legs) ])
+  return num_bets*amount

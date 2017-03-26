@@ -22,10 +22,11 @@ SCRIPT_VERSION = '1.0'
 #------------------------------------------------------------------------------
 def get_args():
   parser = argparse.ArgumentParser()
-  parser.add_argument('-d','--date',      dest='date',      default=r'[0-9]+')
-  parser.add_argument('-t','--track',     dest='track',     default=r'^[a-z]+')
-  parser.add_argument('-r','--race',      dest='race',      default=None)
-  parser.add_argument('-v','--verbosity', dest='verbosity', default='OFF')
+  parser.add_argument('-d','--date',      action='store',      dest='date',      default=r'[0-9]+')
+  parser.add_argument('-t','--track',     action='store',      dest='track',     default=r'^[a-z]+')
+  parser.add_argument('-r','--race',      action='store',      dest='race',      default=None)
+  parser.add_argument('-v','--verbosity', action='store',      dest='verbosity', default='OFF')
+  parser.add_argument('-s','--save',      action='store_true')
   args = parser.parse_args()
   utilities.set_verbosity(args.verbosity)
   return args
@@ -34,6 +35,7 @@ def get_args():
 def plot_bet(bet_list, DIFF, bet_name):
   hook(SCRIPT_NAME, "INFO", "MEDIUM", lineno(), "Running plot_bet(bet_list, DIFF, {})".format(bet_name)) 
   df = pd.DataFrame(np.array(bet_list), index=np.array(DIFF)).T
+
   plt.plot(df)
   plt.ylabel("Bank Value ($1)")
   plt.xlabel("Races")
@@ -42,6 +44,14 @@ def plot_bet(bet_list, DIFF, bet_name):
   plt.grid()
   plt.show()
   return
+
+#------------------------------------------------------------------------------
+def save_to_csv(bet_list, DIFF, csv_path):
+  hook(SCRIPT_NAME, "INFO", "MEDIUM", lineno(), "Running save_bet_to_csv(bet_list, DIFF, {})".format(csv_path)) 
+  df = pd.DataFrame(np.array(bet_list), index=np.array(DIFF)).T
+  df.to_csv(csv_path)
+  return
+
 
 #------------------------------------------------------------------------------
 def build_testing_list(track, date):
@@ -66,13 +76,14 @@ def main():
   args = get_args()
   hook(SCRIPT_NAME, "INFO", "LOW", lineno(), "Running version: {}".format(SCRIPT_VERSION))
   testing_list = build_testing_list(args.track, args.date)
-  
+
   # Bet info
   DIFF     = [1,1.25,1.5,1.75,2,2.25,2.5]
-  first    = 'All'
-  second   = [1,2,3]
+  first    = [1,2,3]
+  second   = 'All'
   third    = [1,2,3]
-  bet_name = 'Trifecta: 1st = {}, 2nd = {}, 3rd = {}'.format(first, second, third)
+  bet_name = 'Trifecta: 1st = {} 2nd = {} 3rd = {}'.format(first, second, third)
+  csv_path = './results/{}/trifecta_{}_{}_{}_{}.csv'.format('ALL',first, second, third, args.date)
 
   stata_list = []
   all_test_list=[]
@@ -88,7 +99,8 @@ def main():
         bank.append(bank[-1] + race_outcome)
     all_test_list.append(bank)
   
-
+  if args.save:
+    save_to_csv(all_test_list, DIFF, csv_path)
   hook(SCRIPT_NAME, "INFO", "LOW", lineno(), "Execution time: {}".format(str(datetime.datetime.now() - start_time)))
   plot_bet(all_test_list, DIFF, bet_name)
   # statb.printStats()
