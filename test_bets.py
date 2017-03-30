@@ -79,11 +79,13 @@ def main():
 
   # Bet info
   DIFF     = [1,1.25,1.5,1.75,2,2.25,2.5]
-  first    = [1,2,3]
-  second   = 'All'
-  third    = [1,2,3]
-  bet_name = 'Trifecta: 1st = {} 2nd = {} 3rd = {}'.format(first, second, third)
-  csv_path = './results/{}/trifecta_{}_{}_{}_{}.csv'.format('ALL',first, second, third, args.date)
+  first    = [1,2,3,4]
+  second   = [1,2,3,4]
+  third    = [1,2,3,4]
+  fourth   = 'All'
+  bet_name = 'Superfexta: 1st = {} 2nd = {} 3rd = {} 4th = {}'.format(first, second, third, fourth)
+  csv_path = './results/{}/superfecta_{}_{}_{}_{}_{}.csv'.format(args.track, first, second, third, fourth, args.date)
+  #csv_path = './results/{}/exacta_{}_{}_{}.csv'.format('ALL',first, second, args.date)
 
   stata_list = []
   all_test_list=[]
@@ -95,7 +97,8 @@ def main():
       if not races:
         hook(SCRIPT_NAME, "ERROR", "XXX", lineno(), 'Could not find races: {} {}'.format(day[0], day[1]))
       for race in races:
-        race_outcome = bets.trifecta(race, statb, bet_name, first, second, third, diff)
+        #race_outcome = bets.exacta(race, statb, bet_name, first, second, diff)
+        race_outcome = bets.superfecta(race, statb, bet_name, first, second, third, fourth, diff)
         bank.append(bank[-1] + race_outcome)
     all_test_list.append(bank)
   

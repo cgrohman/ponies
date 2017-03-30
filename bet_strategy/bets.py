@@ -70,18 +70,18 @@ def two_three_overall(races,stat,DIFF=1):
         if (horses[1].finish_position['position'] == '1' or horses[2].finish_position['position'] == '1'):
           WON=True
           stat.races_bet.append((race,WON))
-          logger.debug('WON- Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number,exacta_payout-cost_of_bet))
+          logger.debug('WON - Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number,exacta_payout-cost_of_bet))
         else:
           logger.warning('LOST- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number))
           stat.appendBet([cost_of_bet, exacta_payout, WON])
           return()        
 
 #------------------------------------------------------------------------------
-def exacta(race, stat, first, second='All', DIFF=1):
+def exacta(race, stat, bet_name, first, second='All', DIFF=1):
   '''
   Exactas ex; first = [1,2] second='All'
   '''
-  stat.name = 'Exacta: {} over {}'.format(first,second)
+  stat.name = bet_name
   exacta_payout = float(race.exacta['payout'])
   exacta_bet= int(race.exacta['bet_amount'])
   ordered_horses_odds = race.sortedHorseOdds()
@@ -92,31 +92,26 @@ def exacta(race, stat, first, second='All', DIFF=1):
     hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'Not enough horses for this bet- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
     return(0)
 
-  first_horse_list = []
-  for i in first:
-    first_horse_list.append(ordered_horses_odds[i-1])
-  second_horse_list = []
-  if second != 'All':
-    second_horse_list = second
-  else:
-    for i in ordered_horses_odds:
-      if i in first_horse_list:
-        continue
-      second_horse_list.append(i)
+  first_horse_list, first   = build_horse_list(first,  ordered_horses_odds)
+  second_horse_list, second = build_horse_list(second, ordered_horses_odds)
+
   outcome=0
-  if float(ordered_horses_odds[max(first)-1].odds)*DIFF <= float(ordered_horses_odds[max(first)].odds):
-    cost_of_bet = (len(ordered_horses_odds)-1)*2*exacta_bet
+  if float(ordered_horses_odds[max(first + second)-1].odds)*DIFF <= float(ordered_horses_odds[max(first + second)].odds):
+    cost_of_bet = calculate_bet_cost([first_horse_list, second_horse_list], exacta_bet, True)
     outcome-=cost_of_bet
     WON=False
-    for h in first_horse_list:
-      if h.finish_position['position'] == '1':
-        WON=True
-        stat.races_bet.append((race,WON))
-        outcome+=exacta_payout
-        hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'WON- Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number,exacta_payout-cost_of_bet)) 
-    if not WON:
-      hook(SCRIPT_NAME, "INFO", "MEDIUM", lineno(), 'LOST- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
-      stat.appendBet([cost_of_bet, exacta_payout, WON])
+
+    first_flag  = did_horse_hit(first_horse_list,  '1')
+    second_flag = did_horse_hit(second_horse_list, '2')
+    
+    if first_flag and second_flag:
+      WON=True
+      outcome += exacta_payout
+      hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'WON - Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number,exacta_payout-cost_of_bet)) 
+    else:
+      hook(SCRIPT_NAME, "INFO", "MEDIUM", lineno(), 'LOST- Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, -cost_of_bet)) 
+    stat.races_bet.append((race, WON))
+    stat.appendBet([cost_of_bet, exacta_payout, WON])
   return(outcome)
 
 #------------------------------------------------------------------------------
@@ -155,12 +150,12 @@ def exacta_box(race, stat, first, second='All', DIFF=1):
         second_flag = True
     if first_flag and second_flag:
       WON = True
-      stat.races_bet.append((race,WON))
       outcome += exacta_payout
       hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'WON- Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number,exacta_payout-cost_of_bet))
     else:
       hook(SCRIPT_NAME, "INFO", "MEDIUM", lineno(), 'LOST- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
-      stat.appendBet([cost_of_bet, exacta_payout, WON])
+    stat.races_bet.append((race,WON))
+    stat.appendBet([cost_of_bet, exacta_payout, WON])
   return(outcome)
 
 #------------------------------------------------------------------------------
@@ -184,13 +179,14 @@ def trifecta(race, stat, bet_name, first, second='All', third='All', DIFF=1):
     return(0)
 
   # List of horses based on odds
-  first_horse_list  = build_horse_list(first,  ordered_horses_odds)
-  second_horse_list = build_horse_list(second, ordered_horses_odds)
-  third_horse_list  = build_horse_list(third,  ordered_horses_odds)
+  first_horse_list, first   = build_horse_list(first,  ordered_horses_odds)
+  second_horse_list, second = build_horse_list(second, ordered_horses_odds)
+  third_horse_list, third   = build_horse_list(third,  ordered_horses_odds)
   
   outcome = 0
-  if float(ordered_horses_odds[max(third)-1].odds)*DIFF <= float(ordered_horses_odds[max(third)].odds):
-    hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Position/odds: {}/{} {}/{}'.format(max(third), ordered_horses_odds[max(third)].odds, max(third)+1, ordered_horses_odds[max(third)+1].odds))
+  all_positions = first + second + third
+  if float(ordered_horses_odds[max(all_positions)-1].odds)*DIFF <= float(ordered_horses_odds[max(all_positions)].odds):
+    hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Position/odds: {}/{} {}/{}'.format(max(all_positions), ordered_horses_odds[max(all_positions)].odds, max(all_positions)+1, ordered_horses_odds[max(all_positions)+1].odds))
     cost_of_bet = calculate_bet_cost([first_horse_list, second_horse_list, third_horse_list], trifecta_bet, True)
     outcome -= cost_of_bet
     WON = False
@@ -201,12 +197,65 @@ def trifecta(race, stat, bet_name, first, second='All', third='All', DIFF=1):
     
     if first_flag and second_flag and third_flag:
       WON = True
-      stat.races_bet.append((race,WON))
       outcome += trifecta_payout
       hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'WON - Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, trifecta_payout-cost_of_bet))
     else:
       hook(SCRIPT_NAME, "INFO", "MEDIUM", lineno(), 'LOST- Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, -cost_of_bet)) 
-      stat.appendBet([cost_of_bet, trifecta_payout, WON])
+    stat.races_bet.append((race,WON))
+    stat.appendBet([cost_of_bet, trifecta_payout, WON])
+  return(outcome)
+
+#------------------------------------------------------------------------------
+def superfecta(race, stat, bet_name, first, second='All', third='All', fourth='All', DIFF=1):
+  '''
+  Trifectas ex; first = [1,2,3] second = [1,2,3] third = [1,2,3]
+  '''
+  stat.name = bet_name
+  try:
+    superfecta_payout = float(race.superfecta['payout'])
+    superfecta_bet    = float(race.superfecta['bet_amount'])
+  except:
+    hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'Race did not contain superfecta data- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
+    return(0)
+  if superfecta_bet == 0:
+    hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'Race did not contain superfecta data- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
+    return(0)
+
+  ordered_horses_odds = race.sortedHorseOdds()
+  if not ordered_horses_odds:
+    hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'No odds for any horses- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
+    return(0)
+  if len(ordered_horses_odds)<6:
+    hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'Not enough horses for this bet- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
+    return(0)
+
+  # List of horses based on odds
+  first_horse_list, first   = build_horse_list(first,  ordered_horses_odds)
+  second_horse_list, second = build_horse_list(second, ordered_horses_odds)
+  third_horse_list, third   = build_horse_list(third,  ordered_horses_odds)
+  fourth_horse_list, fourth = build_horse_list(fourth,  ordered_horses_odds)
+  
+  outcome = 0
+  all_positions = first + second + third + fourth
+  if float(ordered_horses_odds[max(all_positions)-1].odds)*DIFF <= float(ordered_horses_odds[max(all_positions)].odds):
+    hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Position/odds: {}/{} {}/{}'.format(max(all_positions), ordered_horses_odds[max(all_positions)-1].odds, max(all_positions)+1, ordered_horses_odds[max(all_positions)].odds))
+    cost_of_bet = calculate_bet_cost([first_horse_list, second_horse_list, third_horse_list, fourth_horse_list], superfecta_bet, True)
+    outcome -= cost_of_bet
+    WON = False
+    
+    first_flag  = did_horse_hit(first_horse_list,  '1')
+    second_flag = did_horse_hit(second_horse_list, '2')
+    third_flag  = did_horse_hit(third_horse_list,  '3')
+    fourth_flag = did_horse_hit(fourth_horse_list, '4')
+    
+    if first_flag and second_flag and third_flag and fourth_flag:
+      WON = True
+      outcome += superfecta_payout
+      hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'WON - Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, superfecta_payout-cost_of_bet))
+    else:
+      hook(SCRIPT_NAME, "INFO", "MEDIUM", lineno(), 'LOST- Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, -cost_of_bet)) 
+    stat.races_bet.append((race,WON))
+    stat.appendBet([cost_of_bet, superfecta_payout, WON])
   return(outcome)
 
 #------------------------------------------------------------------------------
@@ -231,12 +280,15 @@ def odds_to_horses(abs_place, ordered_horses, **params):
 #------------------------------------------------------------------------------
 def build_horse_list(abs_place, ordered_horses):
   horse_list = []
+  pos_list   = []
   if abs_place == 'All':
     horse_list = ordered_horses
+    pos_list = [0]
   else:
     for i in abs_place:
       horse_list.append(ordered_horses[i-1])
-  return horse_list
+    pos_list = abs_place
+  return horse_list, pos_list
 
 #------------------------------------------------------------------------------
 def did_horse_hit(horses, position):
