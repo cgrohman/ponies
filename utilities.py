@@ -54,3 +54,12 @@ def hook(calling_file, status, verbosity, line_number, message):
     print("[ERROR   " + hook_padding_spaces + str(line_number) + " (" + calling_file  + ")]: " + message)
   if (status == "FATAL"):
     sys.exit("[FATAL   " + hook_padding_spaces + str(line_number) + " (" + calling_file  + ")]: " + message)
+
+#------------------------------------------------------------------------------
+def truncate(f, n):
+  '''Truncates/pads a float f to n decimal places without rounding'''
+  s = '{}'.format(f)
+  if 'e' in s or 'E' in s:
+    return '{0:.{1}f}'.format(f, n)
+  i, p, d = s.partition('.')
+  return float('.'.join([i, (d+'0'*n)[:n]]))

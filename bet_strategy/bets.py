@@ -6,9 +6,12 @@ import itertools
 
 from utilities import hook
 from utilities import lineno
+import utilities
 
 SCRIPT_NAME = 'bets.py'
 SCRIPT_VERSION = '1.0'
+
+BREAKAGE = 1  # 1 = one digit after period (rounds down to nearest tenth)
 
 #------------------------------------------------------------------------------
 def one_two_overall(races,stat,DIFF=1):
@@ -159,7 +162,7 @@ def exacta_box(race, stat, first, second='All', DIFF=1):
   return(outcome)
 
 #------------------------------------------------------------------------------
-def trifecta(race, stat, bet_name, first, second='All', third='All', DIFF=1):
+def trifecta(race, stat, bet_name, first, second='All', third='All', DIFF=1, purse_min=0):
   '''
   Trifectas ex; first = [1,2,3] second = [1,2,3] third = [1,2,3]
   '''
@@ -185,7 +188,7 @@ def trifecta(race, stat, bet_name, first, second='All', third='All', DIFF=1):
   
   outcome = 0
   all_positions = first + second + third
-  if float(ordered_horses_odds[max(all_positions)-1].odds)*DIFF <= float(ordered_horses_odds[max(all_positions)].odds):
+  if float(ordered_horses_odds[max(all_positions)-1].odds)*DIFF <= float(ordered_horses_odds[max(all_positions)].odds) and float(race.trifecta['pool']) >= purse_min:
     hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Position/odds: {}/{} {}/{}'.format(max(all_positions), ordered_horses_odds[max(all_positions)].odds, max(all_positions)+1, ordered_horses_odds[max(all_positions)+1].odds))
     cost_of_bet = calculate_bet_cost([first_horse_list, second_horse_list, third_horse_list], trifecta_bet, True)
     outcome -= cost_of_bet
@@ -206,7 +209,7 @@ def trifecta(race, stat, bet_name, first, second='All', third='All', DIFF=1):
   return(outcome)
 
 #------------------------------------------------------------------------------
-def superfecta(race, stat, bet_name, first, second='All', third='All', fourth='All', DIFF=1):
+def superfecta(race, stat, bet_name, first, second='All', third='All', fourth='All', DIFF=1, purse_min = 0):
   '''
   Trifectas ex; first = [1,2,3] second = [1,2,3] third = [1,2,3]
   '''
@@ -257,6 +260,43 @@ def superfecta(race, stat, bet_name, first, second='All', third='All', fourth='A
     stat.races_bet.append((race,WON))
     stat.appendBet([cost_of_bet, superfecta_payout, WON])
   return(outcome)
+
+#------------------------------------------------------------------------------
+def straight(race, stat, bet_name, horse_num, finish, DIFF=1, purse_min = 0):
+  """
+  horse: is the odds ordered horse ('1' = horse with best odds to win)
+  finish: list of positions that 'horse' can finish in
+  """
+  stat.name = bet_name
+  ordered_horses_odds = race.sortedHorseOdds()
+  if not ordered_horses_odds:
+    hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'No odds for any horses- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
+    return(0)
+  if len(ordered_horses_odds)<horse_num+1:
+    hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'Not enough horses for this bet- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
+    return(0)
+ 
+  outcome = 0
+  horse = ordered_horses_odds[horse_num - 1]
+  if float(horse.odds)*DIFF <= float(ordered_horses_odds[horse_num].odds):
+    hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Position/odds: {}/{}'.format(horse_num, horse.odds))
+    cost_of_bet = len(finish) * 2
+    outcome -= cost_of_bet
+    WON = False
+    payout = utilities.truncate(float(horse.odds) * 2 + 2, BREAKAGE)
+    
+    for f in finish:
+      if did_horse_hit([horse], str(f)):
+        WON = True
+        outcome += payout
+        hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'WON - Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, payout-cost_of_bet))
+    if not WON:
+      hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'LOST- Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, -cost_of_bet))
+
+    stat.races_bet.append((race,WON))
+    stat.appendBet([cost_of_bet, payout, WON])
+  return(outcome)
+
 
 #------------------------------------------------------------------------------
 def odds_to_horses(abs_place, ordered_horses, **params):
