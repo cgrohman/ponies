@@ -32,8 +32,10 @@ def main():
           hook('add_wps.py', "WARNING", "XXX", lineno(), "Unable to find horse: Date:{} Track: {} RN: {} Name: {}".format(row[2], row[1], row[3], row[7])) 
           continue
         row = remove_trailing_blanks(row)
-        hook('add_wps.py', "INFO", "HIGH", lineno(), "Updating: Date:{} Track: {} RN: {} Name: {} WPS: [{}, {}, {}]".format(row[2], row[1], row[3], row[7], row[-4], row[-3], row[-2])) 
-        db.update_one({'date':date, 'track':track, 'race_number':rn, 'name':name},{'$set': {'wps':[row[-4], row[-3], row[-2]]}})
+        weight = row[8]
+        claim_value = row[16]
+        hook('add_wps.py', "INFO", "HIGH", lineno(), "Updating: Date:{} Track: {} RN: {} Name: {} Weight: {} Claim Value: {}".format(row[2], row[1], row[3], row[7], weight, claim_value))
+        db.update_one({'date':date, 'track':track, 'race_number':rn, 'name':name},{'$set': {'weight':weight, 'claim_value':claim_value}})
 
 
 if __name__ == '__main__':

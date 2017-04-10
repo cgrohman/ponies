@@ -8,6 +8,7 @@ import logging
 class Race():
 	def __init__(self, track, date, race_type, race_number, description,
 				horse_age_req, distance, start_time, time_splits, finish_time, purse, weather,
+				card_type, breed, dist_unit, track_condition, class_rating, surface,
 				exacta=None, trifecta=None, superfecta=None, quinella=None, pick_3=None,
 				pick_4=None, pick_5=None, daily_double=None, consolation_pick=None):
 		self.track = track 						# C
@@ -31,6 +32,12 @@ class Race():
 		self.daily_double=daily_double
 		self.consolation_pick=consolation_pick
 		self.weather=weather
+		self.card_type=card_type
+		self.breed=breed
+		self.track_condition=track_condition
+		self.class_rating=class_rating
+		self.surface=surface
+		self.dist_unit=dist_unit
 		self.horses = Horse.findHorses(track=track, date=date, race_number=race_number)
 
 	@staticmethod
@@ -60,7 +67,8 @@ class Race():
 				purse=r['purse'], weather=r['weather'], exacta=r['exacta'], trifecta=r['trifecta'], 
 				superfecta=r['superfecta'], quinella=r['quinella'], pick_3=r['pick_3'], pick_4=r['pick_4'],
 				pick_5=r['pick_5'], daily_double=r['daily_double'], consolation_pick=r['consolation_pick'],
-				description=r['description'])
+				description=r['description'], card_type=r['card_type'], breed=r['breed'], dist_unit=r['dist_unit'],
+				track_condition=r['track_condition'], class_rating=r['class_rating'], surface=r['surface'])
 			races_list.append(temp_race)
 		return(races_list)
 

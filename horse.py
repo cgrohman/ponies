@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 class Horse():
 	def __init__(self,number,gate_position,date,track,race_number,name,jockey,age,
-				odds,position_splits,gender,finish_position, wps):
+				odds,position_splits,gender,finish_position, wps, weight, claim_value):
 		self.number=number					# O
 		self.gate_position=gate_position	# P
 		self.date=date						# C
@@ -15,6 +15,8 @@ class Horse():
 		self.position_splits=position_splits # [{S:T},{U:V},{W:X},{Y:Z}]
 		self.gender=gender					# K
 		self.finish_position=finish_position
+		self.weight=weight
+		self.claim_value=claim_value
 		self.wps = wps
 
 	@staticmethod
@@ -40,5 +42,6 @@ class Horse():
 								date=h['date'], track=h['track'], race_number=h['race_number'], 
 								name=h['name'], jockey=h['jockey'], age=h['age'], odds=h['odds'], 
 								position_splits=h['position_splits'], gender=h['gender'],
-								finish_position=h['finish_position'], wps=h['wps']))
+								finish_position=h['finish_position'], wps=h['wps'], weight=h['weight'],
+								claim_value=h['claim_value']))
 		return(horses_list)
