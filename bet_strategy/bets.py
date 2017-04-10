@@ -1,6 +1,7 @@
 from stats import Stats
 from race import Race
 from horse import Horse
+import sys
 import pdb
 import itertools
 
@@ -11,7 +12,8 @@ import utilities
 SCRIPT_NAME = 'bets.py'
 SCRIPT_VERSION = '1.0'
 
-BREAKAGE = 1  # 1 = one digit after period (rounds down to nearest tenth)
+BREAKAGE   = 1   # 1 = one digit after period (rounds down to nearest tenth)
+MIN_PAYOUT = -1 # $2.40 is the minimum payout
 
 #------------------------------------------------------------------------------
 def one_two_overall(races,stat,DIFF=1):
@@ -262,11 +264,15 @@ def superfecta(race, stat, bet_name, first, second='All', third='All', fourth='A
   return(outcome)
 
 #------------------------------------------------------------------------------
-def straight(race, stat, bet_name, horse_num, finish, DIFF=1, purse_min = 0):
+def straight(race, stat, bet_name, horse_num, finish_wps, DIFF=1, purse_min = 0):
   """
   horse: is the odds ordered horse ('1' = horse with best odds to win)
   finish: list of positions that 'horse' can finish in
   """
+  if finish_wps not in ['WIN', 'PLACE', 'SHOW']:
+    hook(SCRIPT_NAME, "FATAL", "XXX", lineno(), "Finish input incorrect, expected ['WIN', 'PLACE', 'SHOW'], got:{} ".format(finish_wps))
+    sys.exit()
+
   stat.name = bet_name
   ordered_horses_odds = race.sortedHorseOdds()
   if not ordered_horses_odds:
@@ -275,16 +281,30 @@ def straight(race, stat, bet_name, horse_num, finish, DIFF=1, purse_min = 0):
   if len(ordered_horses_odds)<horse_num+1:
     hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), 'Not enough horses for this bet- Date: {} Track: {} Race: {}'.format(race.date, race.track, race.race_number)) 
     return(0)
- 
+
   outcome = 0
   horse = ordered_horses_odds[horse_num - 1]
   if float(horse.odds)*DIFF <= float(ordered_horses_odds[horse_num].odds):
     hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Position/odds: {}/{}'.format(horse_num, horse.odds))
-    cost_of_bet = len(finish) * 2
+    finish = []
+    payout = 0
+    if finish_wps == 'WIN':
+      finish = [1]
+      payout = float(horse.wps[0])
+    elif finish_wps == 'PLACE':
+      finish = [1, 2]
+      payout = float(horse.wps[1])
+    elif finish_wps == 'SHOW':
+      finish = [1, 2, 3]
+      payout = float(horse.wps[2])
+    
+    if payout-2 < MIN_PAYOUT:
+      payout = MIN_PAYOUT + 2
+    
+    cost_of_bet = 2
     outcome -= cost_of_bet
     WON = False
-    payout = utilities.truncate(float(horse.odds) * 2 + 2, BREAKAGE)
-    
+
     for f in finish:
       if did_horse_hit([horse], str(f)):
         WON = True

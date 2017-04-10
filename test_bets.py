@@ -85,9 +85,9 @@ def main():
   third     = [1]
   fourth    = 'All'
   horse     = 6
-  finish    = [1,2,3]
+  finish    = 'SHOW'
   bet_name  = 'Straight: Horse = {} Finish = {}'.format(horse, finish)
-  csv_path  = './results/{}/straight_br0.1_{}_{}.csv'.format('ALL', horse, finish, args.date)
+  csv_path  = './results/{}/straight_br0.1_min0.4_{}_{}.csv'.format('ALL', horse, finish, args.date)
   #csv_path = './results/{}/exacta_{}_{}_{}.csv'.format('ALL',first, second, args.date)
 
   stata_list = []

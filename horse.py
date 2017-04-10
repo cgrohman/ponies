@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 class Horse():
 	def __init__(self,number,gate_position,date,track,race_number,name,jockey,age,
-				odds,position_splits,gender,finish_position):
+				odds,position_splits,gender,finish_position, wps):
 		self.number=number					# O
 		self.gate_position=gate_position	# P
 		self.date=date						# C
@@ -15,10 +15,11 @@ class Horse():
 		self.position_splits=position_splits # [{S:T},{U:V},{W:X},{Y:Z}]
 		self.gender=gender					# K
 		self.finish_position=finish_position
+		self.wps = wps
 
 	@staticmethod
 	def findHorses(number=None,gate_position=None,date=None,track=None,race_number=None,name=None,jockey=None
-				,age=None,odds=None,position_splits=None,gender=None,finish_position=None):
+				,age=None,odds=None,position_splits=None,gender=None,finish_position=None, wps = None):
 		query = {}
 		for k,v in locals().items():
 			if v is None or k == 'query':continue
@@ -39,5 +40,5 @@ class Horse():
 								date=h['date'], track=h['track'], race_number=h['race_number'], 
 								name=h['name'], jockey=h['jockey'], age=h['age'], odds=h['odds'], 
 								position_splits=h['position_splits'], gender=h['gender'],
-								finish_position=h['finish_position']))
+								finish_position=h['finish_position'], wps=h['wps']))
 		return(horses_list)
