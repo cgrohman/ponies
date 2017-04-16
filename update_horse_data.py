@@ -28,6 +28,7 @@ def main():
         track = row[1].strip()
         rn    = row[3].strip()
         name  = row[7].strip()
+        #pdb.set_trace()
         if db.find_one({'date':date, 'track':track, 'race_number':rn, 'name':name}) is None:
           hook('add_wps.py', "WARNING", "XXX", lineno(), "Unable to find horse: Date:{} Track: {} RN: {} Name: {}".format(row[2], row[1], row[3], row[7])) 
           continue
@@ -35,7 +36,7 @@ def main():
         weight = row[8]
         claim_value = row[16]
         hook('add_wps.py', "INFO", "HIGH", lineno(), "Updating: Date:{} Track: {} RN: {} Name: {} Weight: {} Claim Value: {}".format(row[2], row[1], row[3], row[7], weight, claim_value))
-        db.update_one({'date':date, 'track':track, 'race_number':rn, 'name':name},{'$set': {'weight':weight, 'claim_value':claim_value}})
+        db.update_one({'date':date, 'track':track, 'race_number':rn, 'name':name},{'$set': {'weight':weight, 'claim_value':claim_value, 'wps':[row[-4],row[-3],row[-2]]}})
 
 
 if __name__ == '__main__':
