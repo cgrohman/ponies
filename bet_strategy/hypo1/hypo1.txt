@@ -1,0 +1,202 @@
+Hypothesis 1:
+  - Use all horses and race information + horse of interest, to classify as WPS or not.
+  - AR: Find max number of horses in the field. For all races that do not have that number of horses data will be filled in respectively.
+
+  Determine to bet or not? Run the classifier on all horses of a race, pick the top 3 (by percentage to WPS), then determine if payoff is worth the trifecta box price.
+
+  CD 20150502 rn: 11, 18 horses in field
+
+Race fields:
+#        Type        Name                   Data rep:
+FIELD2   Char(2)     Race Breed TYPE        OHE
+FIELD3   Char(3)     3 Char Track Code      OHE
+FIELD4   Num(8)      Date (YYYYMMDD)        week of the year
+FIELD5   Num(2)      Race Number            
+FIELD6   Char(1)     D=Day Card E=Evening   binary 0/1
+FIELD7   Char(25)    Race Type              OHE
+FIELD8   Num(10)     Purse Value            def > scaled
+FIELD14  Num(6)      Distance               def > scaled
+FIELD15  Char(1)     Distance Unit          OHE
+FIELD17  Char(1)     Surface                OHE
+FIELD18  Num(3)      Class Rating           def > scaled
+FIELD19  Char(2)     Track Condition        OHE
+FIELD20  Char(10)    Weather                OHE
+
+Horse fields
+#        Type        Name                   Data rep
+FIELD9   Num(3)      Horse Weight           def > scaled
+FIELD10  Num(2)      Horse Age              LE > scaled
+FIELD11  Char(1)     Sex (M,C,F,G,H)        OHE 
+FIELD14  Num(7,2)    Odds / $               def > scaled
+FIELD16  Num(2)      Post Position          OHE
+FIELD17  Num(12)     Claim Value            def > scaled
+
+Trying to Predict this!
+FIELD31  Num(4)      Official Finish
+
+
+The following are the definitions of abbreviations used in the TrackMaster charts
+
+BREED
+
+AP                   Appaloosa
+AR                   Arabian
+MX                   Mixed Breed
+PT                   Paint
+QH                   Quarter Horse
+TB                   Thoroughbred
+
+DISTANCE UNIT
+
+F                    Furlongs
+M                    Meters
+Y                    Yards
+
+SURFACE
+
+D                    D-Dirt                        
+E                    D-Equitrack                   
+F                    D-Dirt training               
+N                    D-Inner track                 
+B                    T-Timber                      
+C                    T-Downhill turf course        
+G                    T-Turf training               
+I                    T-Inner turf                  
+J                    T-Jump race                   
+M                    T-Hurdle                      
+S                    T-Steeplechase                
+T                    T-Turf                        
+U                    T-Hunt on turf                
+V                    T-Hunt Flat (Weatherbys only)
+
+RACE TYPE / CLASS
+
+ALW                  Allowance                     
+CL                   claiming                      
+CLH                  Claiming Handicap             
+CLM                  Claiming                      
+CST                  Claiming stake                
+G1                   grade 1                       
+G2                   grade 2                       
+G3                   grade 3                       
+HCP                  Handicap                      
+HST                  Stakes handicap               
+MDN                  Maiden                        
+MAT                  Match race                    
+MCL                  Maiden Claiming               
+MSW                  Maiden special weight         
+OCH                  Optional claiming handicap    
+OCL                  Optional claiming             
+SHP                  Starter handicap              
+STK                  Stakes                        
+STR                  Starters allowance            
+TR                   Training race
+
+AGE
+
+02                   2 yo                          
+03                   3 yo                          
+04                   4 yo                          
+05                   5 yo                          
+06                   6 yo                          
+07                   7 yo                          
+08                   8 yo                          
+09                   9 yo                          
+23                   2 & 3 yo's                    
+2U                   2 yo's & up                   
+34                   3 & 4 yo's                    
+35                   3, 4, & 5 yo's                
+36                   3, 4, 5 & 6 yo's              
+3U                   3 yo's & up                   
+45                   4 & 5 yo's                    
+46                   4, 5 & 6 yo's                 
+47                   4, 5, 6 & 7 yo's              
+4U                   4 yo's & up                   
+56                   5 & 6 yo's                    
+57                   5, 6 & 7 yo's                 
+58                   5, 6, 7 & 8 yo's              
+59                   5, 6, 7, 8 & 9 yo's           
+5U                   5 yo's & up                   
+67                   6 & 7 yo's                    
+68                   6, 7 & 8 yo's                 
+69                   6, 7, 8 & 9 yo's              
+6U                   6 yo's & up                   
+78                   7 & 8 yo's                    
+79                   7, 8 & 9 yo's                 
+7U                   7 yo's & up                   
+8U                   8 yo's & up                   
+9U                   9 yo's & up
+
+MEDICATION / EQUIPMENT
+
+A                    Aluminum pads                 
+B                    Blinkers                      
+C                    Mud calks                     
+D                    Glued shoes                   
+E                    Inner Rims                    
+F                    Front bandgages               
+G                    Goggles                       
+H                    Outer Rims                    
+I                    Inserts                       
+J                    Aluminum pad                  
+L                    Bar shoes                     
+M                    Blocks                        
+N                    No whip                       
+O                    Blinkers off                  
+R                    Bar shoe                      
+S                    Steel shoes                   
+T                    Turndowns                     
+U                    Spurs                         
+W                    Queen's Plates                
+Y                    No shoes                      
+Z                    Tongue tie                    
+B                    Bute                          
+
+SEX 
+
+C                    Colt                          
+F                    Filly                         
+G                    Gelding                       
+H                    Horse                         
+M                    Mare                          
+R                    Ridgling                      
+
+Lasix Change from last race 
+
+N                    Lasix last and lasix this race
+L                    Lasix
+X                    No lasix last, no lasix this
+1                    No lasix last, lasix this race
+2                    No lasix two races back, lasix last and this race
+
+TRACK CONDITION
+
+FT                   D-fast                        
+FZ                   D-frozen                      
+HY                   D-heavy                       
+MY                   D-muddy                       
+SL                   D-slow                        
+SY                   D-sloppy                      
+WF                   D-wet fast                    
+FM                   T-firm                        
+HD                   T-hard                        
+SF                   T-soft                        
+UN                   Unknown                     
+YL                   T-yielding                    
+
+Restrictions of race
+
+C                    C (colts)                     
+F                    F (fillies)                   
+H                    H (horses only)               
+M                    M (mares only)
+R                    Restricted                    
+S                    State                         
+
+WIND DIRECTION (generally displayed only in Quarter Horse races)
+
+C                    Cross
+H                    Head
+N                    No Wind
+T                    Tail
+2,

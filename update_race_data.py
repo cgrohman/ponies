@@ -33,19 +33,16 @@ def main():
           hook(SCRIPT_NAME, "WARNING", "XXX", lineno(), "Unable to find horse: Date:{} Track: {} RN: {}".format(date, track, rn)) 
           continue
         #row = remove_trailing_blanks(row)
-        breed     = row[1]
-        card_type = row[5]
-        purse     = row[7]
         distance  = row[13]
         dist_unit = row[14]
-        surface   = row[16]
-        class_rating = row[17]
-        track_condition = row[18]
+        if dist_unit != 'Y':
+          continue
+
+        distance_f = float(distance)/220
+
         hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), "Updating: Date:{} Track: {} RN: {}".format(date, track, rn))
         db.update_one({'date':date, 'track':track, 'race_number':rn},
-          {'$set': {'breed':breed, 'card_type':card_type, 'purse':purse, 
-                    'distance':distance, 'dist_unit':dist_unit, 'surface':surface,
-                    'class_rating':class_rating, 'track_condition':track_condition}})
+          {'$set': {'distance':distance_f, 'dist_unit':'F'}})
 
 
 if __name__ == '__main__':
