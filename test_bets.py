@@ -78,7 +78,8 @@ def main():
   testing_list = build_testing_list(args.track, args.date)
 
   # Bet info
-  DIFF      = [1,1.25,1.5,1.75,2,2.25,2.5]
+  #DIFF      = [1,1.25,1.5,1.75,2,2.25,2.5]
+  DIFF      = [1]
   purse_min = 000
   first     = [1]
   second    = [1]
@@ -87,7 +88,7 @@ def main():
   horse     = 6
   finish    = 'SHOW'
   bet_name  = 'Straight: Horse = {} Finish = {}'.format(horse, finish)
-  csv_path  = './results/{}/straight_br0.1_min0.4_{}_{}.csv'.format('ALL', horse, finish, args.date)
+  csv_path  = './results/{}/nb_prob0.8_{}.csv'.format('ml', args.date)
   #csv_path = './results/{}/exacta_{}_{}_{}.csv'.format('ALL',first, second, args.date)
 
   stata_list = []
@@ -102,7 +103,7 @@ def main():
       for race in races:
         #race_outcome = bets.exacta(race, statb, bet_name, first, second, diff)
         #race_outcome = bets.trifecta(race, statb, bet_name, first, second, third, diff, purse_min)
-        race_outcome = bets.straight(race, statb, bet_name, horse, finish, diff, purse_min)
+        race_outcome = bets.clf_wps(race, statb, 0.8, diff, purse_min)
         bank.append(bank[-1] + race_outcome)
     all_test_list.append(bank)
   
@@ -111,6 +112,8 @@ def main():
   hook(SCRIPT_NAME, "INFO", "LOW", lineno(), "Execution time: {}".format(str(datetime.datetime.now() - start_time)))
   plot_bet(all_test_list, DIFF, bet_name)
   # statb.printStats()
+
+
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':

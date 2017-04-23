@@ -19,7 +19,7 @@ utilities.set_verbosity('HIGH')
 
 filename = 'results/singleHorse_{}.csv'.format(datetime.now().strftime('%Y-%m-%d'))
 with open(filename,'w') as f:
-  races = Race.findRaces(track=track)
+  races = Race.findRaces()
 
   first_row = 'race_number,purse,distance,class_rating,num_in_field,h_odds,h_age,h_weight,h_gate_position,h_claim_value,h_odds_index,finish_wps\n'
   f.write(first_row)

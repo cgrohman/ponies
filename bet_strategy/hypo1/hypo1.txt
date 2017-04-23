@@ -25,7 +25,7 @@ FIELD20  Char(10)    Weather                OHE
 Horse fields
 #        Type        Name                   Data rep
 FIELD9   Num(3)      Horse Weight           def > scaled
-FIELD10  Num(2)      Horse Age              LE > scaled
+FIELD10  Num(2)      Horse Age              LE  > scaled
 FIELD11  Char(1)     Sex (M,C,F,G,H)        OHE 
 FIELD14  Num(7,2)    Odds / $               def > scaled
 FIELD16  Num(2)      Post Position          OHE

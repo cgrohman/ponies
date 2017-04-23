@@ -1,6 +1,14 @@
 from stats import Stats
 from race import Race
 from horse import Horse
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.cross_validation import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import confusion_matrix
+
 import sys
 import pdb
 import itertools
@@ -317,6 +325,57 @@ def straight(race, stat, bet_name, horse_num, finish_wps, DIFF=1, purse_min = 0)
     stat.appendBet([cost_of_bet, payout, WON])
   return(outcome)
 
+#------------------------------------------------------------------------------
+def clf_wps(race, stat, bet_name, min_prob=0.8, DIFF=1, purse_min = 0):
+  stat.name = bet_name
+  low_to_high_odds = race.sortedHorseOdds()[::-1]
+  outcome = 0
+  labels = ['race_number', 'purse', 'distance', 'class_rating', 'num_in_field', 'h_odds', 'h_age', 'h_weight', 'h_gate_position', 'h_claim_value', 'h_odds_index']
+  clf,x = get_clf()
+
+  horse = None
+  for i,h in enumerate(low_to_high_odds):
+    new = pd.DataFrame([[race.race_number, race.purse, race.distance, race.class_rating, len(low_to_high_odds), h.odds, h.age, h.weight, h.gate_position, h.claim_value, i]])
+    new.columns = labels
+    pdb.set_trace()
+    x_temp = pd.concat([x,new])
+    data_oi = scale_def_col(x_temp, labels).iloc[-1,:]
+    data_oi = data_oi.to_frame().T
+
+    pred = clf.predict(data_oi)
+    probs = clf.predict_proba(data_oi)
+    
+  return(outcome)
+
+
+#------------------------------------------------------------------------------
+def get_clf():
+  df = pd.read_csv('results/singleHorse_2017-04-21.csv')
+  labels = ['race_number', 'purse', 'distance', 'class_rating', 'num_in_field', 'h_odds', 'h_age', 'h_weight', 'h_gate_position', 'h_claim_value', 'h_odds_index']
+
+  df = scale_def_col(df, labels)
+  x = df.iloc[:,:-1]
+  y = df.iloc[:,-1]
+
+  x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+  
+  clf = GaussianNB()
+  clf.fit(x_train, y_train)
+
+  print(confusion_matrix(y_test, clf.predict(x_test)))
+
+  return clf,x
+
+#------------------------------------------------------------------------------
+def scale_def_col(df, label):
+  for la in label:
+    sc = StandardScaler()
+    col = np.array(df[la]).T
+    try:
+      df[la] = sc.fit_transform(col.reshape(-1,1))
+    except:
+      pdb.set_trace()
+  return df
 
 #------------------------------------------------------------------------------
 def odds_to_horses(abs_place, ordered_horses, **params):
