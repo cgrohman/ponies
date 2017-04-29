@@ -78,8 +78,8 @@ def main():
   testing_list = build_testing_list(args.track, args.date)
 
   # Bet info
-  #DIFF      = [1,1.25,1.5,1.75,2,2.25,2.5]
-  DIFF      = [1]
+  DIFF      = [1,2,4,7,10]
+  #DIFF      = [1]
   purse_min = 000
   first     = [1]
   second    = [1]
@@ -87,8 +87,8 @@ def main():
   fourth    = 'All'
   horse     = 6
   finish    = 'SHOW'
-  bet_name  = 'Straight: Horse = {} Finish = {}'.format(horse, finish)
-  csv_path  = './results/{}/nb_prob0.8_{}.csv'.format('ml', args.date)
+  bet_name  = 'GaussianNB: Prob > 0.8, Odds > 2.0'
+  csv_path  = './results/{}/nb_prob0.8_odds2.0_{}.csv'.format('ml', args.date)
   #csv_path = './results/{}/exacta_{}_{}_{}.csv'.format('ALL',first, second, args.date)
 
   stata_list = []
