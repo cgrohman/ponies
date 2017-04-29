@@ -8,6 +8,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cross_validation import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import confusion_matrix
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_regression
+from sklearn.pipeline import Pipeline
 
 import sys
 import pdb
@@ -21,7 +24,7 @@ SCRIPT_NAME = 'bets.py'
 SCRIPT_VERSION = '1.0'
 
 BREAKAGE   = 1   # 1 = one digit after period (rounds down to nearest tenth)
-MIN_PAYOUT = -1 # $2.40 is the minimum payout
+MIN_PAYOUT = 0.4 # $2.40 is the minimum payout
 
 #------------------------------------------------------------------------------
 def one_two_overall(races,stat,DIFF=1):
@@ -331,50 +334,85 @@ def clf_wps(race, stat, bet_name, min_prob=0.8, DIFF=1, purse_min = 0):
   low_to_high_odds = race.sortedHorseOdds()[::-1]
   outcome = 0
   labels = ['race_number', 'purse', 'distance', 'class_rating', 'num_in_field', 'h_odds', 'h_age', 'h_weight', 'h_gate_position', 'h_claim_value', 'h_odds_index']
-  clf,x = get_clf()
+  clf, x, sc_dict = get_clf()
 
   horse = None
-  for i,h in enumerate(low_to_high_odds):
-    new = pd.DataFrame([[race.race_number, race.purse, race.distance, race.class_rating, len(low_to_high_odds), h.odds, h.age, h.weight, h.gate_position, h.claim_value, i]])
+  for i,horse in enumerate(low_to_high_odds):
+    h_index = len(low_to_high_odds)-1-i
+    new = pd.DataFrame([[race.race_number, race.purse, race.distance, race.class_rating, len(low_to_high_odds), horse.odds, horse.age, horse.weight, horse.gate_position, horse.claim_value, h_index]])
     new.columns = labels
-    pdb.set_trace()
-    x_temp = pd.concat([x,new])
-    data_oi = scale_def_col(x_temp, labels).iloc[-1,:]
-    data_oi = data_oi.to_frame().T
+    for col in labels:
+      new = scale_col(new, col, sc_dict)
 
-    pred = clf.predict(data_oi)
-    probs = clf.predict_proba(data_oi)
-    
+    pred = clf.predict(new)
+    probs = clf.predict_proba(new)
+    #if probs[0][1] > .8 and float(horse.odds)>3:
+    if pred == 1 and float(horse.odds)>DIFF:
+      hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Prob/odds: {0:.2f}/{1}'.format(probs[0][1], horse.odds))
+      cost_of_bet = 2
+      outcome -= cost_of_bet
+      WON = False
+      
+      #SHOW
+      finish = [1, 2, 3]
+      payout = float(horse.wps[2])
+      if payout-2 < MIN_PAYOUT:
+        payout = MIN_PAYOUT + 2
+
+      for f in finish:
+        if did_horse_hit([horse], str(f)):
+          WON = True
+          outcome += payout
+          hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'WON - Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, payout-cost_of_bet))
+      if not WON:
+        hook(SCRIPT_NAME, "INFO", "LOW", lineno(), 'LOST- Date: {} Track: {} Race: {} Net: {}'.format(race.date, race.track, race.race_number, -cost_of_bet))
+      
+      stat.races_bet.append((race,WON))
+      stat.appendBet([cost_of_bet, payout, WON])
   return(outcome)
 
 
 #------------------------------------------------------------------------------
 def get_clf():
-  df = pd.read_csv('results/singleHorse_2017-04-21.csv')
-  labels = ['race_number', 'purse', 'distance', 'class_rating', 'num_in_field', 'h_odds', 'h_age', 'h_weight', 'h_gate_position', 'h_claim_value', 'h_odds_index']
 
-  df = scale_def_col(df, labels)
+  df = pd.read_csv('results/singleHorse_2017-04-21.csv')
+
   x = df.iloc[:,:-1]
   y = df.iloc[:,-1]
 
-  x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+  columns = list(x.columns)
+
+  sc_dict = sc_fit(x,columns)
+
+  for col in columns:
+    x = scale_col(x, col, sc_dict)
+
+  #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
   
   clf = GaussianNB()
-  clf.fit(x_train, y_train)
-
-  print(confusion_matrix(y_test, clf.predict(x_test)))
-
-  return clf,x
+  nb_filter = SelectKBest(f_regression, k=5)
+  nb_pipe = Pipeline([('anova',nb_filter), ('nb',clf)])
+  nb_pipe.fit(x,y)
+  score = nb_pipe.score(x,y)  
+  return nb_pipe,x,sc_dict
 
 #------------------------------------------------------------------------------
-def scale_def_col(df, label):
-  for la in label:
+def sc_fit(df, labels):
+  sc_dict = {}
+  for label in labels:
     sc = StandardScaler()
-    col = np.array(df[la]).T
-    try:
-      df[la] = sc.fit_transform(col.reshape(-1,1))
-    except:
-      pdb.set_trace()
+    col = np.array(df[label]).T
+    sc.fit(col.reshape(-1,1))
+    sc_dict[label] = sc
+  return sc_dict
+
+#------------------------------------------------------------------------------
+def scale_col(df, label, sc_dict):
+  col = np.array(df[label]).T
+  try:
+    df[label] = sc_dict[label].transform(col.reshape(-1,1))
+  except:
+    pdb.set_trace()
   return df
 
 #------------------------------------------------------------------------------
