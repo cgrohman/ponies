@@ -11,6 +11,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_regression
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_val_score
 
 import sys
 import pdb
@@ -329,12 +330,11 @@ def straight(race, stat, bet_name, horse_num, finish_wps, DIFF=1, purse_min = 0)
   return(outcome)
 
 #------------------------------------------------------------------------------
-def clf_wps(race, stat, bet_name, min_prob=0.8, DIFF=1, purse_min = 0):
+def clf_wps(race, stat, bet_name, clf_obj, x, sc_dict, min_prob=0.8, DIFF=1, purse_min = 0):
   stat.name = bet_name
   low_to_high_odds = race.sortedHorseOdds()[::-1]
   outcome = 0
   labels = ['race_number', 'purse', 'distance', 'class_rating', 'num_in_field', 'h_odds', 'h_age', 'h_weight', 'h_gate_position', 'h_claim_value', 'h_odds_index']
-  clf, x, sc_dict = get_clf()
 
   horse = None
   for i,horse in enumerate(low_to_high_odds):
@@ -343,11 +343,11 @@ def clf_wps(race, stat, bet_name, min_prob=0.8, DIFF=1, purse_min = 0):
     new.columns = labels
     for col in labels:
       new = scale_col(new, col, sc_dict)
-
+    
+    clf = clf_obj['clf']
     pred = clf.predict(new)
     probs = clf.predict_proba(new)
-    #if probs[0][1] > .8 and float(horse.odds)>3:
-    if pred == 1 and float(horse.odds)>DIFF:
+    if probs[0][1] > .8 and float(horse.odds)>DIFF:
       hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Prob/odds: {0:.2f}/{1}'.format(probs[0][1], horse.odds))
       cost_of_bet = 2
       outcome -= cost_of_bet
@@ -393,7 +393,8 @@ def get_clf():
   nb_filter = SelectKBest(f_regression, k=5)
   nb_pipe = Pipeline([('anova',nb_filter), ('nb',clf)])
   nb_pipe.fit(x,y)
-  score = nb_pipe.score(x,y)  
+  score = nb_pipe.score(x,y)
+  obj = {''}  
   return nb_pipe,x,sc_dict
 
 #------------------------------------------------------------------------------
