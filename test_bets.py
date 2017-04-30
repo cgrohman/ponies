@@ -9,6 +9,16 @@ import re
 import pdb
 import datetime
 
+from sklearn.preprocessing import StandardScaler
+from sklearn.cross_validation import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.metrics import confusion_matrix
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_regression
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_val_score
+
 from race import Race
 from stats import Stats
 from bet_strategy import bets
@@ -93,6 +103,8 @@ def main():
 
   stata_list = []
   all_test_list=[]
+
+  clf_obj,x,sc_dict = get_svc_clf()
   for diff in DIFF:
     statb = Stats(starting_bank=400)
     bank=[1000]
@@ -103,15 +115,85 @@ def main():
       for race in races:
         #race_outcome = bets.exacta(race, statb, bet_name, first, second, diff)
         #race_outcome = bets.trifecta(race, statb, bet_name, first, second, third, diff, purse_min)
-        race_outcome = bets.clf_wps(race, statb, 0.8, diff, purse_min)
+        race_outcome = bets.clf_wps(race, statb, bet_name, clf_obj, x, sc_dict, 0.8, diff, purse_min)
         bank.append(bank[-1] + race_outcome)
     all_test_list.append(bank)
+
   
   if args.save:
     save_to_csv(all_test_list, DIFF, csv_path)
   hook(SCRIPT_NAME, "INFO", "LOW", lineno(), "Execution time: {}".format(str(datetime.datetime.now() - start_time)))
   plot_bet(all_test_list, DIFF, bet_name)
   # statb.printStats()
+
+#------------------------------------------------------------------------------
+def get_nb_clf():
+
+  df = pd.read_csv('results/singleHorse_2017-04-21.csv')
+
+  x = df.iloc[:,:-1]
+  y = df.iloc[:,-1]
+
+  columns = list(x.columns)
+
+  sc_dict = sc_fit(x,columns)
+
+  for col in columns:
+    x = scale_col(x, col, sc_dict)
+
+  #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+  
+  clf = GaussianNB()
+  nb_filter = SelectKBest(f_regression, k=5)
+  nb_pipe = Pipeline([('anova',nb_filter), ('nb',clf)])
+  nb_pipe.fit(x,y)
+  score = nb_pipe.score(x,y)  
+  return nb_pipe,x,sc_dict
+
+#------------------------------------------------------------------------------
+def get_svc_clf():
+
+  df = pd.read_csv('results/singleHorse_2017-04-21.csv')
+
+  x = df.iloc[:,:-1]
+  y = df.iloc[:,-1]
+
+  columns = list(x.columns)
+
+  sc_dict = sc_fit(x,columns)
+
+  for col in columns:
+    x = scale_col(x, col, sc_dict)
+
+  x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+  
+  clf = SVC(probability=True)
+  svc_filter = SelectKBest(f_regression, k=5)
+  svc_pipe = Pipeline([('anova',svc_filter), ('svc',clf)])
+  svc_pipe.fit(x_train, y_train)
+  scores = cross_val_score(svc_pipe, x, y, cv=5)
+  obj = {'clf':svc_pipe,'type':'SVC'}
+  hook(SCRIPT_NAME, "INFO", "LOW", lineno(), "SVC score: {0:.3f}".format(scores.mean()))
+  return obj,x,sc_dict
+
+#------------------------------------------------------------------------------
+def sc_fit(df, labels):
+  sc_dict = {}
+  for label in labels:
+    sc = StandardScaler()
+    col = np.array(df[label]).T
+    sc.fit(col.reshape(-1,1))
+    sc_dict[label] = sc
+  return sc_dict
+
+#------------------------------------------------------------------------------
+def scale_col(df, label, sc_dict):
+  col = np.array(df[label]).T
+  try:
+    df[label] = sc_dict[label].transform(col.reshape(-1,1))
+  except:
+    pdb.set_trace()
+  return df
 
 
 
