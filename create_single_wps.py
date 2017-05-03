@@ -24,6 +24,7 @@ with open(filename,'w') as f:
   first_row = 'race_number,purse,distance,class_rating,num_in_field,h_odds,h_age,h_weight,h_gate_position,h_claim_value,h_odds_index,finish_wps\n'
   f.write(first_row)
   for race in races:
+    if int(race.class_rating) <0: continue 
     ordered_horses = race.sortedHorseOdds()
     for i,horse in enumerate(ordered_horses):
       race_text = '{},{},{},{},{},'.format(race.race_number, race.purse, race.distance, race.class_rating, len(ordered_horses))
