@@ -104,10 +104,11 @@ def main():
   stata_list = []
   all_test_list=[]
 
-  clf_obj,x,sc_dict = get_svc_clf()
+  clf_svc_obj, x, sc_dict = get_svc_clf()
   for diff in DIFF:
     statb = Stats(starting_bank=400)
-    bank=[1000]
+    bank_svc =[1000]
+    bank_nb  =[1000]
     for day in testing_list:
       races = Race.findRaces(date=day[0],track=day[1], race_number=args.race)
       if not races:
@@ -115,7 +116,7 @@ def main():
       for race in races:
         #race_outcome = bets.exacta(race, statb, bet_name, first, second, diff)
         #race_outcome = bets.trifecta(race, statb, bet_name, first, second, third, diff, purse_min)
-        race_outcome = bets.clf_wps(race, statb, bet_name, clf_obj, x, sc_dict, 0.8, diff, purse_min)
+        race_outcome = bets.clf_wps(race, statb, bet_name, clf_svc_obj, x, sc_dict, 0.8, diff, purse_min)
         bank.append(bank[-1] + race_outcome)
     all_test_list.append(bank)
 
@@ -177,6 +178,31 @@ def get_svc_clf():
   return obj,x,sc_dict
 
 #------------------------------------------------------------------------------
+def get_nb_clf():
+
+  df = pd.read_csv('results/singleHorse_2017-04-21.csv')
+
+  x = df.iloc[:,:-1]
+  y = df.iloc[:,-1]
+
+  columns = list(x.columns)
+
+  sc_dict = sc_fit(x,columns)
+
+  for col in columns:
+    x = scale_col(x, col, sc_dict)
+
+  #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+  
+  clf = GaussianNB()
+  nb_filter = SelectKBest(f_regression, k=5)
+  nb_pipe = Pipeline([('anova',nb_filter), ('nb',clf)])
+  nb_pipe.fit(x,y)
+  score = nb_pipe.score(x,y)
+  obj = {'clf':nb_pipe, 'type':'GaussianNB'}  
+  return obj,x,sc_dict
+
+#------------------------------------------------------------------------------
 def sc_fit(df, labels):
   sc_dict = {}
   for label in labels:
@@ -194,8 +220,6 @@ def scale_col(df, label, sc_dict):
   except:
     pdb.set_trace()
   return df
-
-
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
