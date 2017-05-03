@@ -347,7 +347,8 @@ def clf_wps(race, stat, bet_name, clf_obj, x, sc_dict, min_prob=0.8, DIFF=1, pur
     clf = clf_obj['clf']
     pred = clf.predict(new)
     probs = clf.predict_proba(new)
-    if probs[0][1] > .8 and float(horse.odds)>DIFF:
+    #if probs[0][1] > .8 and float(horse.odds)>DIFF:
+    if pred == 1:
       hook(SCRIPT_NAME, "INFO", "HIGH", lineno(), 'Prob/odds: {0:.2f}/{1}'.format(probs[0][1], horse.odds))
       cost_of_bet = 2
       outcome -= cost_of_bet
